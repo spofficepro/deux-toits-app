@@ -27,8 +27,9 @@ export default function JournalTab({ familyId, role }) {
 
   async function publish() {
     if (!text.trim()) return;
-    await supabase.from('journal_entries').insert({ family_id: familyId, author: role, content: text.trim() });
+ await supabase.from('journal_entries').insert({ family_id: familyId, author: role, content: text.trim() });
     setText('');
+    load();
   }
 
   return (

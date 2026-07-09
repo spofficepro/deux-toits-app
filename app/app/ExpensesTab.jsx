@@ -31,12 +31,14 @@ export default function ExpensesTab({ familyId }) {
     e.preventDefault();
     const value = parseFloat(amount);
     if (!desc.trim() || isNaN(value) || value <= 0) return;
-    await supabase.from('expenses').insert({ family_id: familyId, description: desc.trim(), amount: value, payer });
+await supabase.from('expenses').insert({ family_id: familyId, description: desc.trim(), amount: value, payer });
     setDesc(''); setAmount('');
+    load();
   }
 
   async function remove(id) {
     await supabase.from('expenses').delete().eq('id', id);
+    load();
   }
 
   const totalA = expenses.filter(e => e.payer === 'A').reduce((s, e) => s + Number(e.amount), 0);
