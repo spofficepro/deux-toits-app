@@ -41,6 +41,9 @@ export default function Login() {
           {loading ? 'Connexion…' : 'Se connecter'}
         </button>
       </form>
+      <a href="/forgot-password" className="text-xs text-inksoft underline mt-4 inline-block">
+        Mot de passe oublié ?
+      </a>
     </main>
   );
 }
