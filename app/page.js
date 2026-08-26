@@ -21,7 +21,7 @@ export default function Home() {
             parents séparés.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <Link href="/signup" className="btn">Essai gratuit 30 jours</Link>
+            <Link href="/signup" className="btn">Essai gratuit 15 jours</Link>
             <Link href="/login" className="btn btn-ghost">J&apos;ai déjà un compte</Link>
           </div>
         </div>

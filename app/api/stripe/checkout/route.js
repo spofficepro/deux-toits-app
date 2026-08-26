@@ -21,7 +21,7 @@ export async function POST() {
     payment_method_collection: 'always',
     line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
     subscription_data: {
-      trial_period_days: 30,
+      trial_period_days: 15,
       metadata: { family_id: profile.family_id }
     },
     customer_email: user.email,

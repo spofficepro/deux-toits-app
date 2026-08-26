@@ -28,7 +28,7 @@ export default function Signup() {
     <main className="max-w-[420px] mx-auto px-6 py-16">
       <h1 className="font-serif text-2xl mb-2">Créer ton compte</h1>
       <p className="text-sm text-inksoft mb-6">
-        30 jours d&apos;essai gratuit. Une carte bancaire te sera demandée à l&apos;étape suivante
+        15 jours d&apos;essai gratuit. Une carte bancaire te sera demandée à l&apos;étape suivante
         pour activer l&apos;essai (aucun prélèvement avant la fin des 30 jours).
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
