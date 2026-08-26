@@ -14,13 +14,18 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const supabase = createClient();
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).finally(() => setReady(true));
-    } else {
-      setReady(true);
-    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function handleSubmit(e) {
