@@ -51,7 +51,7 @@ export default function Home() {
       <div className="card">
         <div className="flex justify-between items-baseline">
           <span className="font-serif text-2xl">
-            30 jours gratuits<span className="text-sm text-inksoft"> puis 10 € / mois</span>
+            15 jours gratuits<span className="text-sm text-inksoft"> puis 10 € / mois</span>
           </span>
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-teal-tint text-teal">
             Sans engagement
