@@ -6,6 +6,7 @@ import { createClient } from '../../lib/supabase/client';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -32,18 +33,25 @@ export default function Login() {
           type="email" required placeholder="ton@email.fr" className="field"
           value={email} onChange={e => setEmail(e.target.value)}
         />
-        <input
-          type="password" required placeholder="Mot de passe" className="field"
-          value={password} onChange={e => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'} required placeholder="Mot de passe" className="field w-full pr-16"
+            value={password} onChange={e => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-inksoft underline"
+          >
+            {showPassword ? 'Masquer' : 'Afficher'}
+          </button>
+        </div>
         {error && <p className="text-xs text-red">{error}</p>}
         <button className="btn" disabled={loading}>
           {loading ? 'Connexion…' : 'Se connecter'}
         </button>
       </form>
-      <a href="/forgot-password" className="text-xs text-inksoft underline mt-4 inline-block">
-        Mot de passe oublié ?
-      </a>
+      <a href="/forgot-password" className="text-xs text-inksoft underline mt-4 inline-block">Mot de passe oublié ?</a>
     </main>
   );
 }
