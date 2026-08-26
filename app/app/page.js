@@ -5,9 +5,10 @@ import { createClient } from '../../lib/supabase/client';
 import CalendarTab from './CalendarTab';
 import ExpensesTab from './ExpensesTab';
 import JournalTab from './JournalTab';
+import ExportTab from './ExportTab';
 
 export default function App() {
-  const [status, setStatus] = useState('loading'); // loading | blocked | ready
+  const [status, setStatus] = useState('loading');
   const [profile, setProfile] = useState(null);
   const [family, setFamily] = useState(null);
   const [tab, setTab] = useState('calendar');
@@ -74,7 +75,7 @@ export default function App() {
 
   return (
     <main className="max-w-[920px] mx-auto px-6 pb-20">
-      <div className="flex justify-between items-center py-3 border-b border-border mb-6 text-sm text-inksoft">
+      <div className="flex justify-between items-center py-3 border-b border-border mb-10 text-sm text-inksoft">
         <div>
           Espace famille <strong className="text-ink">{family?.invite_code}</strong> · Tu es{' '}
           <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${profile.role === 'A' ? 'bg-teal-tint text-teal' : 'bg-ochre-tint text-ochre'}`}>
@@ -87,7 +88,7 @@ export default function App() {
         </div>
       </div>
 
-           <div className="flex gap-2 p-2 bg-white border border-border rounded-full w-fit mb-10">
+      <div className="flex gap-2 p-2 bg-white border border-border rounded-full w-fit mb-10">
         {[['calendar', 'Calendrier'], ['expenses', 'Dépenses'], ['journal', 'Journal'], ['export', 'Export']].map(([key, label]) => (
           <button
             key={key}
@@ -100,6 +101,7 @@ export default function App() {
       {tab === 'calendar' && <CalendarTab familyId={profile.family_id} />}
       {tab === 'expenses' && <ExpensesTab familyId={profile.family_id} />}
       {tab === 'journal' && <JournalTab familyId={profile.family_id} role={profile.role} />}
+      {tab === 'export' && <ExportTab familyId={profile.family_id} />}
     </main>
   );
 }
