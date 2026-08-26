@@ -27,11 +27,16 @@ export default function ExpensesTab({ familyId }) {
     return () => supabase.removeChannel(channel);
   }, [familyId]);
 
-  async function addExpense(e) {
+   async function addExpense(e) {
     e.preventDefault();
     const value = parseFloat(amount);
     if (!desc.trim() || isNaN(value) || value <= 0) return;
-await supabase.from('expenses').insert({ family_id: familyId, description: desc.trim(), amount: value, payer });
+    await supabase.from('expenses').insert({ family_id: familyId, description: desc.trim(), amount: value, payer });
+    fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ familyId, actingRole: payer, type: 'expense', summary: desc.trim() })
+    }).catch(() => {});
     setDesc(''); setAmount('');
     load();
   }
