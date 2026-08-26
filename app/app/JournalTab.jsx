@@ -33,8 +33,8 @@ export default function JournalTab({ familyId, role }) {
   }
 
   return (
-    <div className="card">
-      <h2 className="text-base font-semibold mb-3.5">Nouvelle note</h2>
+      <div className="card !p-8">
+      <h2 className="text-base font-semibold mb-5">Nouvelle note</h2>
       <div className="flex flex-col gap-2.5 mb-5">
         <textarea
           className="field min-h-[70px]"

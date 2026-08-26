@@ -59,15 +59,15 @@ export default function CalendarTab({ familyId }) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
+        <div className="card !p-8">
+         <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <button onClick={() => setViewDate(new Date(y, m - 1, 1))} className="w-8 h-8 rounded-full border border-border">‹</button>
           <h2 className="font-serif text-xl">{MONTHS_FR[m]} {y}</h2>
           <button onClick={() => setViewDate(new Date(y, m + 1, 1))} className="w-8 h-8 rounded-full border border-border">›</button>
         </div>
       </div>
-      <div className="flex gap-4 mb-4 text-sm text-inksoft">
+            <div className="flex gap-4 mb-6 text-sm text-inksoft">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-teal inline-block" />Toit A</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ochre inline-block" />Toit B</span>
       </div>

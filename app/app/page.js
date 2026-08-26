@@ -87,12 +87,12 @@ export default function App() {
         </div>
       </div>
 
-      <div className="flex gap-1 p-1.5 bg-white border border-border rounded-full w-fit mb-8">
-        {[['calendar','Calendrier'], ['expenses','Dépenses'], ['journal','Journal']].map(([key, label]) => (
+           <div className="flex gap-2 p-2 bg-white border border-border rounded-full w-fit mb-10">
+        {[['calendar', 'Calendrier'], ['expenses', 'Dépenses'], ['journal', 'Journal'], ['export', 'Export']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`text-sm font-medium px-4.5 py-2 rounded-full ${tab === key ? 'bg-ink text-bg' : 'text-inksoft'}`}
+            className={`text-sm font-medium px-6 py-2.5 rounded-full transition-colors ${tab === key ? 'bg-ink text-bg' : 'text-inksoft hover:text-ink'}`}
           >{label}</button>
         ))}
       </div>

@@ -48,7 +48,7 @@ await supabase.from('expenses').insert({ family_id: familyId, description: desc.
 
   return (
     <div>
-      <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-8">
         <div className="flex-1 card !p-4">
           <div className="text-xs text-inksoft mb-1.5">Payé par Toit A</div>
           <div className="font-serif text-xl">{totalA.toFixed(2)} €</div>
@@ -65,8 +65,8 @@ await supabase.from('expenses').insert({ family_id: familyId, description: desc.
         </div>
       </div>
 
-      <div className="card">
-        <h2 className="text-base font-semibold mb-3.5">Ajouter une dépense</h2>
+            <div className="card !p-8">
+        <h2 className="text-base font-semibold mb-5">Ajouter une dépense</h2>
         <form onSubmit={addExpense} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2.5 mb-5">
           <input className="field" placeholder="Cantine, mutuelle, vêtements…" value={desc} onChange={e => setDesc(e.target.value)} required />
           <input className="field" type="number" step="0.01" min="0" placeholder="Montant €" value={amount} onChange={e => setAmount(e.target.value)} required />
