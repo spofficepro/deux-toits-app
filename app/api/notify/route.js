@@ -16,7 +16,7 @@ export async function POST(req) {
   const recipient = (profiles || []).find(p => p.role !== actingRole);
   if (!recipient) return NextResponse.json({ skipped: true });
 
-  const label = type === 'expense' ? 'une nouvelle dépense' : 'une nouvelle note';
+  const label = type === 'expense' ? 'une nouvelle dépense' : type === 'swap' ? 'une proposition d\'échange' : 'une nouvelle note';
 
   try {
     await fetch('https://api.resend.com/emails', {

@@ -97,8 +97,7 @@ export default function App() {
           >{label}</button>
         ))}
       </div>
-
-      {tab === 'calendar' && <CalendarTab familyId={profile.family_id} />}
+{tab === 'calendar' && <CalendarTab familyId={profile.family_id} role={profile.role} />}
       {tab === 'expenses' && <ExpensesTab familyId={profile.family_id} />}
       {tab === 'journal' && <JournalTab familyId={profile.family_id} role={profile.role} />}
       {tab === 'export' && <ExportTab familyId={profile.family_id} />}
