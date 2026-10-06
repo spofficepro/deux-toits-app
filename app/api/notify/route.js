@@ -13,7 +13,7 @@ export async function POST(req) {
     .select('email, role')
     .eq('family_id', familyId);
 
-  const recipient = (profiles || []).find(p => p.role !== actingRole);
+  const recipient = (profiles || []).find(p => ['A', 'B'].includes(p.role) && p.role !== actingRole);
   if (!recipient) return NextResponse.json({ skipped: true });
 
   const label = type === 'expense' ? 'une nouvelle dépense' : type === 'swap' ? 'une proposition d\'échange' : 'une nouvelle note';
