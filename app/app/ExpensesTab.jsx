@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '../../lib/supabase/client';
 
-export default function ExpensesTab({ familyId }) {
+export default function ExpensesTab({ familyId, role, readOnly = false }) {
   const [expenses, setExpenses] = useState([]);
   const [desc, setDesc] = useState('');
   const [amount, setAmount] = useState('');
@@ -27,21 +27,23 @@ export default function ExpensesTab({ familyId }) {
     return () => supabase.removeChannel(channel);
   }, [familyId]);
 
-   async function addExpense(e) {
+  async function addExpense(e) {
     e.preventDefault();
+    if (readOnly) return;
     const value = parseFloat(amount);
     if (!desc.trim() || isNaN(value) || value <= 0) return;
     await supabase.from('expenses').insert({ family_id: familyId, description: desc.trim(), amount: value, payer });
     fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ familyId, actingRole: payer, type: 'expense', summary: desc.trim() })
+      body: JSON.stringify({ familyId, actingRole: role, type: 'expense', summary: desc.trim() })
     }).catch(() => {});
     setDesc(''); setAmount('');
     load();
   }
 
   async function remove(id) {
+    if (readOnly) return;
     await supabase.from('expenses').delete().eq('id', id);
     load();
   }
@@ -53,7 +55,7 @@ export default function ExpensesTab({ familyId }) {
 
   return (
     <div>
-            <div className="flex gap-4 mb-8">
+      <div className="flex gap-4 mb-8">
         <div className="flex-1 card !p-4">
           <div className="text-xs text-inksoft mb-1.5">Payé par Toit A</div>
           <div className="font-serif text-xl">{totalA.toFixed(2)} €</div>
@@ -70,17 +72,20 @@ export default function ExpensesTab({ familyId }) {
         </div>
       </div>
 
-            <div className="card !p-8">
-        <h2 className="text-base font-semibold mb-5">Ajouter une dépense</h2>
-        <form onSubmit={addExpense} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2.5 mb-5">
-          <input className="field" placeholder="Cantine, mutuelle, vêtements…" value={desc} onChange={e => setDesc(e.target.value)} required />
-          <input className="field" type="number" step="0.01" min="0" placeholder="Montant €" value={amount} onChange={e => setAmount(e.target.value)} required />
-          <select className="field" value={payer} onChange={e => setPayer(e.target.value)}>
-            <option value="A">Payé par Toit A</option>
-            <option value="B">Payé par Toit B</option>
-          </select>
-          <button className="btn !px-4.5">Ajouter</button>
-        </form>
+      <div className="card !p-8">
+        <h2 className="text-base font-semibold mb-5">{readOnly ? 'Dépenses' : 'Ajouter une dépense'}</h2>
+
+        {!readOnly && (
+          <form onSubmit={addExpense} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2.5 mb-5">
+            <input className="field" placeholder="Cantine, mutuelle, vêtements…" value={desc} onChange={e => setDesc(e.target.value)} required />
+            <input className="field" type="number" step="0.01" min="0" placeholder="Montant €" value={amount} onChange={e => setAmount(e.target.value)} required />
+            <select className="field" value={payer} onChange={e => setPayer(e.target.value)}>
+              <option value="A">Payé par Toit A</option>
+              <option value="B">Payé par Toit B</option>
+            </select>
+            <button className="btn !px-4.5">Ajouter</button>
+          </form>
+        )}
 
         {expenses.length === 0 && <p className="text-center text-sm text-inksoft py-8">Aucune dépense enregistrée pour l&apos;instant.</p>}
 
@@ -95,7 +100,7 @@ export default function ExpensesTab({ familyId }) {
                 Toit {exp.payer}
               </span>
               <strong>{Number(exp.amount).toFixed(2)} €</strong>
-              <button onClick={() => remove(exp.id)} className="text-inksoft text-xs underline">Supprimer</button>
+              {!readOnly && <button onClick={() => remove(exp.id)} className="text-inksoft text-xs underline">Supprimer</button>}
             </div>
           </div>
         ))}
