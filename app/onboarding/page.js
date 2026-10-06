@@ -30,7 +30,13 @@ export default function Onboarding() {
 
   function startCreate() {
     setCreatedCode(generateCode());
+    setRole(null);
     setMode('create');
+  }
+
+  function startJoin() {
+    setRole(null);
+    setMode('join');
   }
 
   async function confirmCreate() {
@@ -88,9 +94,9 @@ export default function Onboarding() {
                 <div className="font-semibold text-sm">Créer un espace famille</div>
                 <div className="text-xs text-inksoft">Tu es le premier parent à t&apos;inscrire</div>
               </button>
-              <button onClick={() => setMode('join')} className="text-left p-3.5 rounded-[10px] border border-border hover:border-ink">
+              <button onClick={startJoin} className="text-left p-3.5 rounded-[10px] border border-border hover:border-ink">
                 <div className="font-semibold text-sm">Rejoindre un espace existant</div>
-                <div className="text-xs text-inksoft">L&apos;autre parent t&apos;a envoyé un code</div>
+                <div className="text-xs text-inksoft">Comme parent ou comme spectateur, avec un code</div>
               </button>
             </div>
           </>
@@ -124,7 +130,7 @@ export default function Onboarding() {
               value={code} onChange={e => setCode(e.target.value)}
             />
             <label className="text-xs font-semibold text-inksoft block mb-1.5 mt-4">Tu es</label>
-            <RolePicker role={role} setRole={setRole} />
+            <RolePicker role={role} setRole={setRole} allowViewer />
             {error && <p className="text-xs text-red mt-2">{error}</p>}
             <button onClick={confirmJoin} disabled={!role || !code || loading} className="btn w-full mt-5">
               {loading ? 'Connexion…' : 'Entrer dans l\'espace'}
@@ -136,17 +142,30 @@ export default function Onboarding() {
   );
 }
 
-function RolePicker({ role, setRole }) {
+function RolePicker({ role, setRole, allowViewer = false }) {
   return (
-    <div className="flex gap-2.5">
-      <div
-        onClick={() => setRole('A')}
-        className={`flex-1 p-3 rounded-[10px] border text-center text-sm font-medium cursor-pointer ${role === 'A' ? 'border-teal bg-teal-tint text-teal' : 'border-border'}`}
-      >Toit A</div>
-      <div
-        onClick={() => setRole('B')}
-        className={`flex-1 p-3 rounded-[10px] border text-center text-sm font-medium cursor-pointer ${role === 'B' ? 'border-ochre bg-ochre-tint text-ochre' : 'border-border'}`}
-      >Toit B</div>
+    <div>
+      <div className="flex gap-2.5">
+        <div
+          onClick={() => setRole('A')}
+          className={`flex-1 p-3 rounded-[10px] border text-center text-sm font-medium cursor-pointer ${role === 'A' ? 'border-teal bg-teal-tint text-teal' : 'border-border'}`}
+        >Toit A</div>
+        <div
+          onClick={() => setRole('B')}
+          className={`flex-1 p-3 rounded-[10px] border text-center text-sm font-medium cursor-pointer ${role === 'B' ? 'border-ochre bg-ochre-tint text-ochre' : 'border-border'}`}
+        >Toit B</div>
+      </div>
+      {allowViewer && (
+        <>
+          <div
+            onClick={() => setRole('viewer')}
+            className={`mt-2.5 p-3 rounded-[10px] border text-center text-sm cursor-pointer ${role === 'viewer' ? 'border-ink font-semibold' : 'border-border font-medium'}`}
+          >Spectateur (consultation seule)</div>
+          {role === 'viewer' && (
+            <p className="text-xs text-inksoft mt-2">Tu pourras tout consulter, sans rien modifier.</p>
+          )}
+        </>
+      )}
     </div>
   );
 }
