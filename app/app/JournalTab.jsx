@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '../../lib/supabase/client';
 
-export default function JournalTab({ familyId, role }) {
+export default function JournalTab({ familyId, role, readOnly = false }) {
   const [entries, setEntries] = useState([]);
   const [text, setText] = useState('');
   const supabase = createClient();
@@ -26,23 +26,30 @@ export default function JournalTab({ familyId, role }) {
   }, [familyId]);
 
   async function publish() {
+    if (readOnly) return;
     if (!text.trim()) return;
- await supabase.from('journal_entries').insert({ family_id: familyId, author: role, content: text.trim() });
+    await supabase.from('journal_entries').insert({ family_id: familyId, author: role, content: text.trim() });
     setText('');
     load();
   }
 
   return (
-      <div className="card !p-8">
-      <h2 className="text-base font-semibold mb-5">Nouvelle note</h2>
-      <div className="flex flex-col gap-2.5 mb-5">
-        <textarea
-          className="field min-h-[70px]"
-          placeholder="Rendez-vous médical, information pour l'école, changement d'organisation…"
-          value={text} onChange={e => setText(e.target.value)}
-        />
-        <button onClick={publish} className="btn self-start !px-4.5">Publier la note</button>
-      </div>
+    <div className="card !p-8">
+      {!readOnly && (
+        <>
+          <h2 className="text-base font-semibold mb-5">Nouvelle note</h2>
+          <div className="flex flex-col gap-2.5 mb-5">
+            <textarea
+              className="field min-h-[70px]"
+              placeholder="Rendez-vous médical, information pour l'école, changement d'organisation…"
+              value={text} onChange={e => setText(e.target.value)}
+            />
+            <button onClick={publish} className="btn self-start !px-4.5">Publier la note</button>
+          </div>
+        </>
+      )}
+
+      {readOnly && <h2 className="text-base font-semibold mb-5">Journal</h2>}
 
       {entries.length === 0 && (
         <p className="text-center text-sm text-inksoft py-8">
