@@ -20,7 +20,7 @@ export default function App() {
       if (!user) { router.push('/login'); return; }
       const { data: prof } = await supabase
         .from('profiles')
-        .select('*, families(invite_code)')
+        .select('*, families(invite_code, viewer_code)')
         .eq('id', user.id)
         .single();
       if (!prof?.family_id) { router.push('/onboarding'); return; }
@@ -44,6 +44,13 @@ export default function App() {
     const res = await fetch('/api/stripe/portal', { method: 'POST' });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
+  }
+
+  async function regenerateViewerCode() {
+    if (!window.confirm('Générer un nouveau code spectateur ? Les spectateurs actuels perdront l\'accès et devront utiliser le nouveau code.')) return;
+    const { data, error } = await supabase.rpc('regenerate_viewer_code');
+    if (error) { window.alert(error.message); return; }
+    setFamily(f => ({ ...f, viewer_code: data }));
   }
 
   async function logout() {
@@ -86,7 +93,7 @@ export default function App() {
     <main className="max-w-[920px] mx-auto px-6 pb-20">
       <div className="flex justify-between items-center py-3 border-b border-border mb-10 text-sm text-inksoft">
         <div>
-          Espace famille <strong className="text-ink">{family?.invite_code}</strong> · Tu es{' '}
+          Espace famille{!isViewer && family?.invite_code && <> <strong className="text-ink">{family.invite_code}</strong></>} · Tu es{' '}
           <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${badgeClass}`}>
             {isViewer ? 'Spectateur' : `Toit ${profile.role}`}
           </span>
@@ -96,6 +103,14 @@ export default function App() {
           <button onClick={logout} className="underline">Se déconnecter</button>
         </div>
       </div>
+      {!isViewer && family?.viewer_code && (
+        <p className="text-sm text-inksoft -mt-6 mb-8">
+          Code pour inviter un spectateur (consultation seule) :{' '}
+          <strong className="text-ink tracking-wider">{family.viewer_code}</strong>
+          {' · '}
+          <button onClick={regenerateViewerCode} className="underline">Régénérer</button>
+        </p>
+      )}
       {isViewer && (
         <p className="text-sm text-inksoft mb-6">Mode consultation : tu peux tout voir, mais rien modifier.</p>
       )}
