@@ -40,19 +40,18 @@ export default function Onboarding() {
   }
 
   async function confirmCreate() {
-    if (!role) return;
+    if (!role || role === 'viewer') return;
     setLoading(true);
     setError('');
-    const { data: family, error: famErr } = await supabase
+    const familyId = crypto.randomUUID();
+    const { error: famErr } = await supabase
       .from('families')
-      .insert({ invite_code: createdCode })
-      .select()
-      .single();
+      .insert({ id: familyId, invite_code: createdCode });
     if (famErr) { setError(famErr.message); setLoading(false); return; }
 
     const { error: profErr } = await supabase
       .from('profiles')
-      .upsert({ id: user.id, email: user.email, family_id: family.id, role });
+      .upsert({ id: user.id, email: user.email, family_id: familyId, role });
     if (profErr) { setError(profErr.message); setLoading(false); return; }
 
     router.push('/billing/start');
@@ -62,21 +61,16 @@ export default function Onboarding() {
     if (!role || !code) return;
     setLoading(true);
     setError('');
-    const { data: family, error: findErr } = await supabase
-      .from('families')
-      .select('id')
-      .eq('invite_code', code.trim().toUpperCase())
-      .single();
-    if (findErr || !family) {
-      setError('Code introuvable. Vérifie auprès de l\'autre parent.');
+    const { error: joinErr } = await supabase.rpc('join_family', { p_code: code, p_role: role });
+    if (joinErr) {
+      setError(
+        joinErr.message.includes('Code introuvable')
+          ? 'Code introuvable. Vérifie auprès de l\'autre parent.'
+          : joinErr.message
+      );
       setLoading(false);
       return;
     }
-    const { error: profErr } = await supabase
-      .from('profiles')
-      .upsert({ id: user.id, email: user.email, family_id: family.id, role });
-    if (profErr) { setError(profErr.message); setLoading(false); return; }
-
     router.push('/app');
   }
 
