@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '../../lib/supabase/client';
 
 export default function ResetPassword() {
@@ -10,22 +11,43 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState(false);
+  const started = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     const supabase = createClient();
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get('token_hash');
 
+    // Nouvelle méthode : le jeton est dans l'adresse du lien (marche sur tout navigateur/appareil)
+    if (tokenHash) {
+      supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash }).then(({ error: verifyError }) => {
+        if (verifyError) {
+          setLinkError(true);
+        } else {
+          window.history.replaceState({}, '', '/reset-password');
+          setReady(true);
+        }
+      });
+      return;
+    }
+
+    // Ancienne méthode (anciens liens) : garde le comportement d'avant
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });
-
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setReady(true);
-      }
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true);
     });
-
-    return () => listener.subscription.unsubscribe();
+    // Si rien ne se passe, on affiche une erreur au lieu de rester bloqué
+    const timer = setTimeout(() => setLinkError(true), 8000);
+    return () => {
+      clearTimeout(timer);
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   async function handleSubmit(e) {
@@ -48,9 +70,7 @@ export default function ResetPassword() {
       <h1 className="font-serif text-2xl mb-2">Nouveau mot de passe</h1>
       {done ? (
         <p className="text-sm text-inksoft">Mot de passe mis à jour, redirection…</p>
-      ) : !ready ? (
-        <p className="text-sm text-inksoft">Vérification du lien…</p>
-      ) : (
+      ) : ready ? (
         <>
           <p className="text-sm text-inksoft mb-6">Choisis ton nouveau mot de passe.</p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -73,6 +93,15 @@ export default function ResetPassword() {
             </button>
           </form>
         </>
+      ) : linkError ? (
+        <>
+          <p className="text-sm text-inksoft mb-4">
+            Ce lien est invalide ou expiré. Les liens ne fonctionnent qu&apos;une fois et pendant un temps limité.
+          </p>
+          <Link href="/forgot-password" className="btn inline-block">Demander un nouveau lien</Link>
+        </>
+      ) : (
+        <p className="text-sm text-inksoft">Vérification du lien…</p>
       )}
     </main>
   );
