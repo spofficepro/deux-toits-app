@@ -26,7 +26,7 @@ export async function POST(req) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Deux Toits <onboarding@resend.dev>',
+        from: 'Deux Toits <notifications@deux-toits.fr>',
         to: recipient.email,
         subject: `Toit ${actingRole} a ajouté ${label}`,
         html: `<p>Toit ${actingRole} vient d'ajouter ${label} dans votre espace Deux Toits :</p><p><strong>${summary}</strong></p><p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/app">Ouvrir Deux Toits</a></p>`
