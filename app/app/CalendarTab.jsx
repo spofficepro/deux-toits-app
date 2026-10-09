@@ -38,9 +38,13 @@ export default function CalendarTab({ familyId, role, readOnly = false }) {
     setSwaps(data || []);
   }
 
-  useEffect(() => {
+  function refresh() {
     loadDays();
     loadSwaps();
+  }
+
+  useEffect(() => {
+    refresh();
     const ch1 = supabase
       .channel('calendar_days_' + familyId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'calendar_days', filter: `family_id=eq.${familyId}` }, loadDays)
@@ -49,28 +53,34 @@ export default function CalendarTab({ familyId, role, readOnly = false }) {
       .channel('swap_requests_' + familyId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'swap_requests', filter: `family_id=eq.${familyId}` }, loadSwaps)
       .subscribe();
-    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+
+    // Filet de sécurité si la connexion temps réel tombe : rafraîchit
+    // régulièrement et dès que l'onglet redevient visible.
+    const timer = setInterval(refresh, 8000);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', refresh);
+      supabase.removeChannel(ch1);
+      supabase.removeChannel(ch2);
+    };
   }, [familyId]);
 
-  async function cycleDay(key) {
-    const cur = days[key];
-    const next = cur === undefined ? 'A' : cur === 'A' ? 'B' : undefined;
-    setDays(prev => {
-      const copy = { ...prev };
-      if (next === undefined) delete copy[key]; else copy[key] = next;
-      return copy;
-    });
-    if (next === undefined) {
-      await supabase.from('calendar_days').delete().eq('family_id', familyId).eq('day', key);
-    } else {
-      await supabase.from('calendar_days').upsert({ family_id: familyId, day: key, parent: next });
-    }
+  // Un jour vide est attribué au parent connecté (Toit A ou Toit B).
+  async function assignDay(key) {
+    setDays(prev => ({ ...prev, [key]: role }));
+    const { error } = await supabase.from('calendar_days').upsert({ family_id: familyId, day: key, parent: role });
+    if (error) loadDays();
   }
 
   function onDayClick(key) {
     if (readOnly) return;
     const val = days[key];
-    if (!val) { cycleDay(key); return; }
+    if (!val) { assignDay(key); return; }
     if (swaps.some(s => s.day === key)) return;
     setConfirmDay(key);
   }
@@ -78,7 +88,18 @@ export default function CalendarTab({ familyId, role, readOnly = false }) {
   async function proposeSwap(key) {
     if (readOnly) return;
     setConfirmDay(null);
-    await supabase.from('swap_requests').insert({ family_id: familyId, day: key, requested_by: role });
+    const tempId = 'tmp-' + key;
+    setSwaps(prev => [{ id: tempId, family_id: familyId, day: key, requested_by: role, status: 'pending' }, ...prev]);
+    const { data, error } = await supabase
+      .from('swap_requests')
+      .insert({ family_id: familyId, day: key, requested_by: role })
+      .select()
+      .single();
+    if (error || !data) {
+      setSwaps(prev => prev.filter(s => s.id !== tempId));
+      return;
+    }
+    setSwaps(prev => prev.map(s => (s.id === tempId ? data : s)));
     fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -88,19 +109,26 @@ export default function CalendarTab({ familyId, role, readOnly = false }) {
 
   async function respondSwap(req, accept) {
     if (readOnly) return;
+    setSwaps(prev => prev.filter(s => s.id !== req.id));
     if (accept) {
       const current = days[req.day];
       const next = current === 'A' ? 'B' : 'A';
-      await supabase.from('calendar_days').upsert({ family_id: familyId, day: req.day, parent: next });
-      await supabase.from('swap_requests').update({ status: 'accepted' }).eq('id', req.id);
+      setDays(prev => ({ ...prev, [req.day]: next }));
+      const { error: e1 } = await supabase.from('calendar_days').upsert({ family_id: familyId, day: req.day, parent: next });
+      const { error: e2 } = await supabase.from('swap_requests').update({ status: 'accepted' }).eq('id', req.id);
+      if (e1 || e2) refresh();
     } else {
-      await supabase.from('swap_requests').update({ status: 'declined' }).eq('id', req.id);
+      const { error } = await supabase.from('swap_requests').update({ status: 'declined' }).eq('id', req.id);
+      if (error) refresh();
     }
   }
 
   async function cancelSwap(id) {
     if (readOnly) return;
-    await supabase.from('swap_requests').update({ status: 'declined' }).eq('id', id);
+    if (String(id).startsWith('tmp-')) return;
+    setSwaps(prev => prev.filter(s => s.id !== id));
+    const { error } = await supabase.from('swap_requests').update({ status: 'declined' }).eq('id', id);
+    if (error) refresh();
   }
 
   const y = viewDate.getFullYear(), m = viewDate.getMonth();
@@ -189,7 +217,7 @@ export default function CalendarTab({ familyId, role, readOnly = false }) {
         <p className="text-sm text-inksoft mt-4">
           {readOnly
             ? 'Mode consultation : le calendrier ne peut pas être modifié depuis un compte spectateur.'
-            : 'Clique sur un jour vide pour l\'attribuer. Clique sur un jour déjà attribué pour proposer un échange.'}
+            : 'Clique sur un jour vide pour l\'attribuer à ton toit. Clique sur un jour déjà attribué pour proposer un échange.'}
         </p>
       </div>
 
