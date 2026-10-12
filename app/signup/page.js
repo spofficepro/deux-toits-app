@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '../../lib/supabase/client';
 
 export default function Signup() {
@@ -9,6 +10,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e) {
@@ -50,6 +52,18 @@ export default function Signup() {
             {showPassword ? 'Masquer' : 'Afficher'}
           </button>
         </div>
+        <label className="flex items-start gap-2 text-xs text-inksoft leading-relaxed">
+          <input
+            type="checkbox" required className="mt-0.5"
+            checked={accepted} onChange={e => setAccepted(e.target.checked)}
+          />
+          <span>
+            J&apos;accepte les{' '}
+            <Link href="/cgu" target="_blank" className="underline">conditions générales</Link>
+            {' '}et la{' '}
+            <Link href="/confidentialite" target="_blank" className="underline">politique de confidentialité</Link>.
+          </span>
+        </label>
         {error && <p className="text-xs text-red">{error}</p>}
         <button className="btn" disabled={loading}>
           {loading ? 'Création…' : 'Créer mon compte'}

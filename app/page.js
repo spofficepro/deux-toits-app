@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Footer from './_components/Footer';
 
 export default function Home() {
   return (
@@ -61,6 +62,8 @@ export default function Home() {
           Un abonnement par foyer, partagé entre les deux parents. Résiliable à tout moment.
         </p>
       </div>
+
+      <Footer />
     </main>
   );
 }
