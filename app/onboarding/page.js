@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../lib/supabase/client';
 
@@ -18,6 +18,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const submitting = useRef(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -42,19 +43,55 @@ export default function Onboarding() {
   }
 
   async function confirmCreate() {
-    if (!role) return;
+    if (!role || submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError('');
+
+    // Si ce compte a déjà un espace famille (clic en double, retour arrière…), on ne recrée rien.
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('family_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (existing?.family_id) {
+      router.push('/billing/start');
+      return;
+    }
+
+    // Création de la famille. Si le code est déjà pris (rare), on en génère un autre et on réessaie.
     const familyId = crypto.randomUUID();
-    const { error: famErr } = await supabase
-      .from('families')
-      .insert({ id: familyId, invite_code: createdCode });
-    if (famErr) { setError(famErr.message); setLoading(false); return; }
+    let codeToUse = createdCode;
+    let famErr = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { error } = await supabase
+        .from('families')
+        .insert({ id: familyId, invite_code: codeToUse });
+      famErr = error;
+      if (!error) break;
+      if (error.code === '23505' || error.message.includes('families_invite_code_key')) {
+        codeToUse = generateCode();
+        setCreatedCode(codeToUse);
+        continue;
+      }
+      break;
+    }
+    if (famErr) {
+      setError('Impossible de créer l\'espace. Réessaie dans un instant.');
+      setLoading(false);
+      submitting.current = false;
+      return;
+    }
 
     const { error: profErr } = await supabase
       .from('profiles')
       .upsert({ id: user.id, email: user.email, family_id: familyId, role });
-    if (profErr) { setError(profErr.message); setLoading(false); return; }
+    if (profErr) {
+      setError(profErr.message);
+      setLoading(false);
+      submitting.current = false;
+      return;
+    }
 
     router.push('/billing/start');
   }
