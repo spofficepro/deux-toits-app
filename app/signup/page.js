@@ -11,6 +11,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [sent, setSent] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e) {
@@ -18,13 +19,36 @@ export default function Signup() {
     setError('');
     setLoading(true);
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (signUpError) {
       setError(signUpError.message);
       return;
     }
-    router.push('/onboarding');
+    // Si l'email doit être confirmé, il n'y a pas encore de session : on l'explique clairement.
+    if (data?.session) {
+      router.push('/onboarding');
+    } else {
+      setSent(true);
+    }
+  }
+
+  if (sent) {
+    return (
+      <main className="max-w-[420px] mx-auto px-6 py-16">
+        <div className="card">
+          <h1 className="font-serif text-2xl mb-3">Vérifie ta boîte mail</h1>
+          <p className="text-sm text-inksoft leading-relaxed mb-3">
+            Nous avons envoyé un lien de confirmation à <strong>{email}</strong>.
+            Clique dessus pour activer ton compte, puis reviens te connecter.
+          </p>
+          <p className="text-xs text-inksoft leading-relaxed mb-5">
+            Tu ne le vois pas ? Regarde dans tes courriers indésirables (spam).
+          </p>
+          <Link href="/login" className="btn w-full text-center">Me connecter</Link>
+        </div>
+      </main>
+    );
   }
 
   return (
